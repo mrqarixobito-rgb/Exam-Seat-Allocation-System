@@ -12,7 +12,7 @@
 Open your terminal (Command Prompt, PowerShell, or Terminal) and run:
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/mrqarixobito-rgb/Exam-Seat-Allocation-System.git
 cd seat
 ```
 
@@ -34,4 +34,5 @@ seat_system.exe
 **On Linux / macOS:**
 ```bash
 ./seat_system
+
 ```
