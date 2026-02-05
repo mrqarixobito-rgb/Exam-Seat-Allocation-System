@@ -1,0 +1,38 @@
+SMART EXAM SEAT SYSTEM - PROJECT REQUIREMENTS
+
+=========================================
+1. BUILD & ENVIRONMENT REQUIREMENTS
+=========================================
+- Language: C++
+- Standard: C++11 or higher (Required for <random>, <vector>, etc.)
+- Compiler: GCC (g++), Clang, or MSVC (Visual Studio)
+- External Libraries: None (Standard Template Library only)
+- OS: Windows (Recommended), Linux, or macOS
+
+=========================================
+2. FUNCTIONAL REQUIREMENTS
+=========================================
+The system implements the following features:
+
+A. User Authentication
+   - Secure login mechanism to prevent unauthorized access.
+
+B. Student Management
+   - Ability to add new students with Roll No, Name, and Department.
+   - Maintain student records in memory.
+
+C. Seat Allocation
+   - Randomly allocate unique seat numbers to registered students.
+   - Display the allocation list (Roll No, Name, Seat).
+
+D. Data Structure Utilization
+   - Queue: For processing student entry.
+   - Binary Search Tree (BST): For efficient searching of students by Roll No.
+   - Hash Table: For fast data retrieval.
+   - Hall Tree: To visualize the hierarchical structure of examination halls.
+   - Graph: To represent connectivity between halls.
+
+E. Visualization & Reporting
+   - Display list of all students with assigned seats.
+   - Visual representation of the Hall Tree.
+   - Visual representation of the Hall Graph.

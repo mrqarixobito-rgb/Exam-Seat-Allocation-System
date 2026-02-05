@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Exam Seat System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-light: #ffffff;
+            --bg-dark: #1a1a1a;
+            --text-light: #333;
+            --text-dark: #e0e0e0;
+            --border-light: #e9ecef;
+            --border-dark: #333;
+        }
+        
+        html.dark-mode {
+            --bg-light: #1a1a1a;
+            --bg-dark: #ffffff;
+            --text-light: #e0e0e0;
+            --text-dark: #333;
+            --border-light: #333;
+            --border-dark: #e9ecef;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s;
+        }
+        
+        html.dark-mode body {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        }
+        
+        .laptop-frame {
+            width: 100%;
+            max-width: 1200px;
+            background: linear-gradient(145deg, #e0e0e0, #ffffff);
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 
+                0 0 60px rgba(0, 0, 0, 0.4),
+                inset 0 0 20px rgba(255, 255, 255, 0.8);
+            position: relative;
+        }
+        
+        html.dark-mode .laptop-frame {
+            background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+            box-shadow: 
+                0 0 60px rgba(0, 0, 0, 0.8),
+                inset 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+        
+        .laptop-frame::before {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 30px;
+            background: linear-gradient(145deg, #cccccc, #999999);
+            border-radius: 0 0 30px 30px;
+        }
+        
+        html.dark-mode .laptop-frame::before {
+            background: linear-gradient(145deg, #333, #1a1a1a);
+        }
+        
+        .container {
+            background: var(--bg-light);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 100%;
+            width: 100%;
+            padding: 40px;
+            transition: background 0.3s, color 0.3s;
+            color: var(--text-light);
+        }
+        
+        html.dark-mode .container {
+            background: var(--bg-light);
+            color: var(--text-light);
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: var(--primary-gradient);
+            padding: 30px;
+            border-radius: 10px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .login-form { display: none; }
+        .login-form.active { display: block; }
+        .menu-page { display: none; }
+        .menu-page.active { display: block; }
+        .add-student-form { display: none; }
+        .add-student-form.active { display: block; }
+        
+        .form-group { margin-bottom: 20px; }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-light);
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            background: var(--bg-dark);
+            color: var(--text-dark);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+        }
+        
+        .menu-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .menu-btn {
+            padding: 18px 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: white;
+            font-size: 13px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .menu-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-light);
+        }
+        
+        tbody tr {
+            transition: background 0.2s;
+            background: var(--bg-light);
+        }
+        
+        tbody tr:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        tbody tr:last-child td { border-bottom: none; }
+        
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        html.dark-mode .no-data {
+            background: #2d2d2d;
+            color: #aaa;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.show { display: block; }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .logout-btn {
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="laptop-frame">
+        <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        
+        <div class="container">
+            <div class="header">
+                <h1>🎓 Smart Exam Seat Management System</h1>
+                <p>Professional seat allocation and student management platform</p>
+            </div>
+            
+            <div id="message" class="message"></div>
+            
+            <!-- Login Form -->
+            <div id="loginForm" class="login-form active">
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required placeholder="Enter password">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">🔓 Login</button>
+                </form>
+            </div>
+            
+            <!-- Main Menu -->
+            <div id="menuPage" class="menu-page">
+                <div class="menu-buttons">
+                    <button class="menu-btn" onclick="showAddStudent()">➕<br>Add Student</button>
+                    <button class="menu-btn" onclick="showStudents()">👥<br>All Students</button>
+                    <button class="menu-btn" onclick="showAllocateSeats()">🪑<br>Allocate</button>
+                    <button class="menu-btn" onclick="showSearch()">🔍<br>Search</button>
+                    <button class="menu-btn" onclick="showHallTree()">🌳<br>Hall Tree</button>
+                    <button class="menu-btn" onclick="showGraph()">📊<br>Graph</button>
+                </div>
+            </div>
+            
+            <!-- Add Student Form -->
+            <div id="addStudentForm" class="add-student-form">
+                <h3 style="margin-bottom: 25px; color: var(--text-light); font-size: 20px;">➕ Add New Student</h3>
+                <form onsubmit="handleAddStudent(event)">
+                    <div class="form-group">
+                        <label for="rollNo">Roll Number</label>
+                        <input type="number" id="rollNo" required placeholder="Enter roll number">
+                    </div>
+                    <div class="form-group">
+                        <label for="studentName">Student Name</label>
+                        <input type="text" id="studentName" required placeholder="Enter full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <input type="text" id="department" required placeholder="Enter department (e.g., CSE, ECE)">
+                    </div>
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">✓ Add Student</button>
+                        <button type="button" class="btn-secondary" onclick="showMenu()">← Back</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Display Students -->
+            <div id="displayStudents">
+                <h3 style="margin-bottom: 20px; color: var(--text-light); font-size: 20px;">👥 Students List</h3>
+                <div id="statsBar" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700;" id="totalStudents">0</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Total Students</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700;" id="seatsAllocated">0</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Seats Allocated</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: 700;" id="totalHalls">3</div>
+                        <div style="font-size: 12px; opacity: 0.9;">Total Halls</div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Seat</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTbody">
+                        </tbody>
+                    </table>
+                    <div id="noStudents" class="no-data">No students added yet</div>
+                </div>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="showMenu()">← Back to Menu</button>
+            </div>
+            
+            <!-- Search Student -->
+            <div id="searchStudent">
+                <h3 style="margin-bottom: 20px; color: var(--text-light); font-size: 20px;">🔍 Search Student</h3>
+                <form onsubmit="handleSearch(event)">
+                    <div class="form-group">
+                        <label for="searchRoll">Enter Roll Number</label>
+                        <input type="number" id="searchRoll" required placeholder="Enter roll number">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width: 100%;">Search</button>
+                </form>
+                <div id="searchResult" style="margin-top: 20px;">
+                    <div class="no-data">Enter a roll number and search</div>
+                </div>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="showMenu()">← Back to Menu</button>
+            </div>
+            
+            <!-- Allocate Seats -->
+            <div id="allocateSeats">
+                <h3 style="margin-bottom: 20px; color: var(--text-light); font-size: 20px;">🪑 Allocate Seats</h3>
+                <div style="background: #f8f9ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                    <p style="color: var(--text-light); line-height: 1.6;">Automated seat allocation system for all registered students. Seats will be assigned to available halls and rooms.</p>
+                </div>
+                <div id="allocationInfo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;">
+                    <p id="allocationText" style="color: var(--text-light);"></p>
+                </div>
+                <button class="btn-primary" style="width: 100%; margin-bottom: 10px; padding: 14px; font-size: 15px;" onclick="handleAllocateSeats()">🎯 Allocate Seats Now</button>
+                <button class="btn-secondary" style="width: 100%;" onclick="showMenu()">← Back to Menu</button>
+            </div>
+            
+            <!-- Hall Tree -->
+            <div id="hallTreeView" style="padding: 10px;">
+                <h3 style="margin-bottom: 18px; color: #e6edf3; font-size: 22px; letter-spacing: 0.5px;">
+                    🌳 Examination Hall Tree Structure
+                </h3>
+                <div style="background: linear-gradient(145deg, #28374e, #123154); padding: 20px; border-radius: 12px; max-height: 420px; overflow-y: auto; border: 1px solid #2b3b4e; box-shadow: inset 0 0 12px rgba(34, 28, 28, 0.7), 0 0 10px rgba(43, 32, 32, 0.5);">
+                    <pre id="hallTreeContent" style="white-space: pre-wrap; word-wrap: break-word; color: #e6edf3; font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.7; letter-spacing: 0.4px;">
+Loading...
+                    </pre>
+                </div>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px; padding: 10px; font-size: 15px; border-radius: 8px;" onclick="showMenu()">
+                    ← Back to Menu
+                </button>
+            </div>
+            
+            <!-- Graph View -->
+            <div id="graphView">
+                <h3 style="margin-bottom: 20px; color: var(--text-light); font-size: 20px;">📊 Hall Connectivity Graph</h3>
+                <div style="background: #28313a; padding: 20px; border-radius: 8px; max-height: 400px; overflow-y: auto; border: 2px solid var(--border-light);">
+                    <pre id="graphContent" style="white-space: pre-wrap; word-wrap: break-word; color: var(--text-light); font-family: 'Courier New', monospace; font-size: 13px;">Loading...</pre>
+                </div>
+                <button class="btn-secondary" style="width: 100%; margin-top: 20px;" onclick="showMenu()">← Back to Menu</button>
+            </div>
+            
+            <!-- Logout Button -->
+            <button id="logoutBtn" class="btn-danger logout-btn" onclick="handleLogout()" style="display: none;">🚪 Logout</button>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data storage
+        let students = [];
+        let isLoggedIn = false;
+        let seatsAllocated = 0;
+        let isDarkMode = false;
+        
+        // Credentials
+        const ADMIN_USER = "admin";
+        const ADMIN_PASS = "1234";
+        
+        const DEPARTMENTS = ['CS', 'CY', 'English', 'Physics', 'Chemistry', 'Mathematics'];
+        
+        // --- localStorage ko disable kar diya ---
+        function saveStudentsToStorage() {
+            // no-op
+        }
+        function loadStudentsFromStorage() {
+            return false;
+        }
+
+        // Shuffle helper (global use)
+        function shuffleArray(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+        
+        // Generate 150 sample students + AUTO random seats
+        function generateSampleStudents() {
+            const names = [
+                'Muhammad Hassan', 'Zeeshan Bibi', 'Ali Khan', 'Aisha Malik', 'Omar Sheikh',
+                'Zainab Ahmed', 'Hamza Ali', 'Sara Khan', 'Abdullah Hassan', 'Hana Fatima',
+                'Bilal Ahmed', 'Maryam Khan', 'Mukhlis ur rehman', 'Noor Hassan', 'Ibrahim Ali',
+                'Laiba Ahmed', 'Don the Boss', 'Amina Malik', 'Adnan Hassan', 'Rabia Fatima',
+                'Qadir Ahmed', 'Salma Khan', 'Rashid Malik', 'Leila Hassan', 'Samir Ali',
+                'Tooba Ahmed', 'Tariq Khan', 'Uzma Malik', 'Vasim Hassan', 'Wafa Fatima',
+                'Yasir Ahmed', 'Zara Khan', 'Queen G', 'Bushra Hassan', 'Kamil Ali',
+                'Dina Ahmed', 'Emad Khan', 'Fahima Malik', 'Ghani Hassan', 'Hadia Fatima',
+                'Imran Ahmed', 'Jameela Khan', 'Karim Malik', 'Leena Hassan', 'Munir Ali',
+                'Nida Ahmed', 'Osman Khan', 'Parveen Malik', 'Qasim Hassan', 'Rukhsana Fatima'
+            ];
+            
+            if (students.length === 0) {
+                // basic data
+                for (let i = 1; i <= 150; i++) {
+                    const nameIndex = (i - 1) % names.length;
+                    const deptIndex = (i - 1) % DEPARTMENTS.length;
+
+                    students.push({
+                        rollNo: i,
+                        name: names[nameIndex],
+                        department: DEPARTMENTS[deptIndex],
+                        seat: '-'  // fill below
+                    });
+                }
+
+                // overrides
+                const r1 = students.find(s => s.rollNo === 1);
+                if (r1) r1.name = 'Arfeel Shahzada';
+                const r3 = students.find(s => s.rollNo === 3);
+                if (r3) r3.name = 'Zubair Jafar';
+                const r4 = students.find(s => s.rollNo === 4);
+                if (r4) r4.name = 'Uzair Hamayu';
+                
+                // === DEPARTMENT OVERRIDE FOR ROLL 33 ===
+        const s33 = students.find(s => s.rollNo === 33);
+        if (s33) s33.department = 'CY';
+
+                // ==== AUTO RANDOM SEAT ALLOCATION ====
+                const halls = ['Hall-A', 'Hall-B', 'Hall-C'];
+                const rooms = ['101', '102', '103', '104', '105'];
+
+                const allSeats = [];
+                halls.forEach(h => {
+                    rooms.forEach(r => {
+                        for (let s = 1; s <= 10; s++) {
+                            allSeats.push(`${h}-${r}-S${s}`);
+                        }
+                    });
+                });
+
+                const shuffledSeats = shuffleArray(allSeats);
+
+                students.forEach((student, idx) => {
+                    student.seat = shuffledSeats[idx];
+                });
+
+                seatsAllocated = students.length;
+            }
+        }
+        
+        // Theme
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            const html = document.documentElement;
+            const toggleBtn = document.querySelector('.theme-toggle');
+            
+            if (isDarkMode) {
+                html.classList.add('dark-mode');
+                toggleBtn.textContent = '☀️ Light Mode';
+            } else {
+                html.classList.remove('dark-mode');
+                toggleBtn.textContent = '🌙 Dark Mode';
+            }
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        }
+        
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                isDarkMode = true;
+                document.documentElement.classList.add('dark-mode');
+                document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
+            }
+        }
+        
+        function showMessage(text, type = 'success') {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = text;
+            msgEl.className = 'message show ' + type;
+            setTimeout(() => msgEl.classList.remove('show'), 3000);
+        }
+        
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === ADMIN_USER && password === ADMIN_PASS) {
+                isLoggedIn = true;
+                document.getElementById('loginForm').classList.remove('active');
+                document.getElementById('menuPage').classList.add('active');
+                document.getElementById('logoutBtn').style.display = 'block';
+                
+                generateSampleStudents();
+                
+                showMessage('✓ Login successful! 150 students loaded with random seats', 'success');
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+            } else {
+                showMessage('✗ Invalid credentials!', 'error');
+            }
+        }
+        
+        function handleLogout() {
+            isLoggedIn = false;
+            seatsAllocated = 0;
+            students = [];
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('menuPage').classList.remove('active');
+            document.getElementById('addStudentForm').classList.remove('active');
+            document.getElementById('displayStudents').style.display = 'none';
+            document.getElementById('searchStudent').style.display = 'none';
+            document.getElementById('allocateSeats').style.display = 'none';
+            document.getElementById('hallTreeView').style.display = 'none';
+            document.getElementById('graphView').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
+            showMessage('✓ Logged out successfully!', 'success');
+        }
+        
+        function showMenu() {
+            document.getElementById('menuPage').classList.add('active');
+            document.getElementById('addStudentForm').classList.remove('active');
+            document.getElementById('displayStudents').style.display = 'none';
+            document.getElementById('searchStudent').style.display = 'none';
+            document.getElementById('allocateSeats').style.display = 'none';
+            document.getElementById('hallTreeView').style.display = 'none';
+            document.getElementById('graphView').style.display = 'none';
+        }
+        
+        function showAddStudent() {
+            document.getElementById('menuPage').classList.remove('active');
+            document.getElementById('addStudentForm').classList.add('active');
+        }
+        
+        function handleAddStudent(event) {
+            event.preventDefault();
+            const rollNo = parseInt(document.getElementById('rollNo').value);
+            const name = document.getElementById('studentName').value;
+            const dept = document.getElementById('department').value;
+            
+            if (students.some(s => s.rollNo === rollNo)) {
+                showMessage('✗ Student with this roll number already exists!', 'error');
+                return;
+            }
+            
+            students.push({ 
+                rollNo: rollNo, 
+                name, 
+                department: dept,
+                seat: '-'
+            });
+            
+            showMessage('✓ Student added successfully! Total: ' + students.length, 'success');
+            document.getElementById('rollNo').value = '';
+            document.getElementById('studentName').value = '';
+            document.getElementById('department').value = '';
+            
+            setTimeout(() => {
+                showStudents();
+            }, 500);
+        }
+        
+        let currentPage = 1;
+        const itemsPerPage = 50;
+
+        function showStudents() {
+            document.getElementById('menuPage').classList.remove('active');
+            document.getElementById('displayStudents').style.display = 'block';
+
+            document.getElementById('totalStudents').textContent = students.length;
+            document.getElementById('seatsAllocated').textContent = seatsAllocated;
+
+            const tbody = document.getElementById('studentsTbody');
+            const noStudents = document.getElementById('noStudents');
+            const studentsTable = document.getElementById('studentsTable');
+
+            if (students.length === 0) {
+                tbody.innerHTML = '';
+                noStudents.style.display = 'block';
+                studentsTable.style.display = 'none';
+                return;
+            }
+
+            studentsTable.style.display = 'table';
+            noStudents.style.display = 'none';
+
+            const sortedStudents = [...students].sort((a, b) => a.rollNo - b.rollNo);
+
+            currentPage = 1;
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageStudents = sortedStudents.slice(start, end);
+
+            let html = '';
+            pageStudents.forEach((s) => {
+                html += `
+                <tr>
+                    <td><strong>${s.rollNo}</strong></td>
+                    <td>${s.name}</td>
+                    <td><span style="background: rgba(102, 126, 234, 0.2); padding: 4px 8px; border-radius: 4px;">${s.department}</span></td>
+                    <td><strong style="color: #667eea;">${s.seat}</strong></td>
+                </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+
+            const totalPages = Math.ceil(sortedStudents.length / itemsPerPage);
+            const paginationDiv = document.getElementById('pagination') || document.createElement('div');
+            paginationDiv.id = 'pagination';
+            paginationDiv.style.cssText = 'text-align: center; padding: 15px; margin-top: 10px;';
+
+            let paginationHTML = `Page ${currentPage} of ${totalPages} | `;
+            if (currentPage < totalPages) {
+                paginationHTML += `<button onclick="goToPage(${currentPage + 1})" style="padding: 5px 10px; margin: 0 3px; cursor: pointer;">Next</button>`;
+                paginationHTML += `<button onclick="goToPage(${totalPages})" style="padding: 5px 10px; margin: 0 3px; cursor: pointer;">Last</button>`;
+            }
+            paginationDiv.innerHTML = paginationHTML;
+
+            if (!document.getElementById('pagination')) {
+                studentsTable.parentNode.insertBefore(paginationDiv, studentsTable.nextSibling);
+            }
+        }
+
+        function goToPage(page) {
+            const sortedStudents = [...students].sort((a, b) => a.rollNo - b.rollNo);
+            const totalPages = Math.ceil(sortedStudents.length / itemsPerPage);
+
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                const tbody = document.getElementById('studentsTbody');
+                const start = (currentPage - 1) * itemsPerPage;
+                const end = start + itemsPerPage;
+                const pageStudents = sortedStudents.slice(start, end);
+
+                let html = '';
+                pageStudents.forEach((s) => {
+                    html += `
+                    <tr>
+                        <td><strong>${s.rollNo}</strong></td>
+                        <td>${s.name}</td>
+                        <td><span style="background: rgba(102, 126, 234, 0.2); padding: 4px 8px; border-radius: 4px;">${s.department}</span></td>
+                        <td><strong style="color: #667eea;">${s.seat}</strong></td>
+                    </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+
+                const paginationDiv = document.getElementById('pagination');
+                let paginationHTML = `Page ${currentPage} of ${totalPages}`;
+                paginationDiv.innerHTML = paginationHTML;
+            }
+        }
+        
+        function showSearch() {
+            document.getElementById('menuPage').classList.remove('active');
+            document.getElementById('searchStudent').style.display = 'block';
+            document.getElementById('searchResult').innerHTML = '<div class="no-data">Enter a roll number and search</div>';
+            document.getElementById('searchRoll').value = '';
+        }
+        
+        function handleSearch(event) {
+            event.preventDefault();
+            const rollNo = parseInt(document.getElementById('searchRoll').value);
+            const student = students.find(s => s.rollNo === rollNo);
+            
+            const result = document.getElementById('searchResult');
+            if (student) {
+                result.innerHTML = `
+                    <table style="width: 100%; background: var(--bg-light); border-radius: 8px; overflow: hidden;">
+                        <tr>
+                            <td style="padding: 12px; border-bottom: 1px solid var(--border-light); font-weight: 600; width: 40%;"><strong>Roll No:</strong></td>
+                            <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${student.rollNo}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border-bottom: 1px solid var(--border-light); font-weight: 600;"><strong>Name:</strong></td>
+                            <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${student.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; border-bottom: 1px solid var(--border-light); font-weight: 600;"><strong>Department:</strong></td>
+                            <td style="padding: 12px; border-bottom: 1px solid var(--border-light);">${student.department}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 12px; font-weight: 600;"><strong>Allocated Seat:</strong></td>
+                            <td style="padding: 12px; color: #667eea; font-weight: bold;">${student.seat}</td>
+                        </tr>
+                    </table>
+                `;
+                showMessage('✓ Student found!', 'success');
+            } else {
+                result.innerHTML = '<div class="no-data">✗ Student not found</div>';
+                showMessage('✗ Student not found!', 'error');
+            }
+        }
+        
+        function showAllocateSeats() {
+            document.getElementById('menuPage').classList.remove('active');
+            document.getElementById('allocateSeats').style.display = 'block';
+            document.getElementById('allocationInfo').style.display = 'none';
+        }
+        
+        function handleAllocateSeats() {
+            if (students.length === 0) {
+                showMessage('✗ No students to allocate seats!', 'error');
+                return;
+            }
+            const halls = ['Hall-A', 'Hall-B', 'Hall-C'];
+            const rooms = ['101', '102', '103', '104', '105'];
+
+            const allSeats = [];
+            halls.forEach(h => {
+                rooms.forEach(r => {
+                    for (let s = 1; s <= 10; s++) {
+                        allSeats.push(`${h}-${r}-S${s}`);
+                    }
+                });
+            });
+
+            const shuffledSeats = shuffleArray(allSeats);
+            const shuffledStudents = shuffleArray(students);
+
+            if (shuffledStudents.length > shuffledSeats.length) {
+                showMessage('✗ Not enough seats for all students!', 'error');
+                return;
+            }
+
+            shuffledStudents.forEach((student, idx) => {
+                student.seat = shuffledSeats[idx];
+            });
+            
+            seatsAllocated = students.length;
+
+            showStudents();
+
+            const info = document.getElementById('allocationInfo');
+            info.style.display = 'block';
+            document.getElementById('allocationText').textContent = `✓ Seats allocated successfully! All ${students.length} students have been assigned random seats.`;
+
+            showMessage(`✓ ${students.length} seats re-allocated successfully (random)!`, 'success');
+        }
+        
+        function showHallTree() {
+            document.getElementById('menuPage').classList.remove('active');
+            document.getElementById('hallTreeView').style.display = 'block';
+            document.getElementById('hallTreeContent').textContent = `🏢 EXAMINATION HALL TREE STRUCTURE
+
+Total Capacity: 300 Students | Total Rooms: 15 | Total Blocks: 3
+
+Hall-A (100 students capacity)
+├── Block-1 (50 seats)
+│   ├── Room-101 (10 seats) → S1 to S10
+│   ├── Room-102 (10 seats) → S1 to S10
+│   ├── Room-103 (10 seats) → S1 to S10
+│   ├── Room-104 (10 seats) → S1 to S10
+│   └── Room-105 (10 seats) → S1 to S10
+└── Block-2 (50 seats)
+    ├── Room-106 (10 seats) → S1 to S10
+    ├── Room-107 (10 seats) → S1 to S10
+    ├── Room-108 (10 seats) → S1 to S10
+    ├── Room-109 (10 seats) → S1 to S10
+    └── Room-110 (10 seats) → S1 to S10
+
+Hall-B (100 students capacity)
+├── Block-3 (50 seats)
+│   ├── Room-201 (10 seats) → S1 to S10
+│   ├── Room-202 (10 seats) → S1 to S10
+│   ├── Room-203 (10 seats) → S1 to S10
+│   ├── Room-204 (10 seats) → S1 to S10
+│   └── Room-205 (10 seats) → S1 to S10
+└── Block-4 (50 seats)
+    ├── Room-206 (10 seats) → S1 to S10
+    ├── Room-207 (10 seats) → S1 to S10
+    ├── Room-208 (10 seats) → S1 to S10
+    ├── Room-209 (10 seats) → S1 to S10
+    └── Room-210 (10 seats) → S1 to S10
+
+Hall-C (100 students capacity)
+├── Block-5 (50 seats)
+│   ├── Room-301 (10 seats) → S1 to S10
+│   ├── Room-302 (10 seats) → S1 to S10
+│   ├── Room-303 (10 seats) → S1 to S10
+│   ├── Room-304 (10 seats) → S1 to S10
+│   └── Room-305 (10 seats) → S1 to S10
+└── Block-6 (50 seats)
+    ├── Room-306 (10 seats) → S1 to S10
+    ├── Room-307 (10 seats) → S1 to S10
+    ├── Room-308 (10 seats) → S1 to S10
+    ├── Room-309 (10 seats) → S1 to S10
+    └── Room-310 (10 seats) → S1 to S10
+
+Emergency Exits: 2 per block | Invigilators: 2 per room`;
+        }
+        
+        function showGraph() {
+            document.getElementById('menuPage').classList.remove('active');
+            document.getElementById('graphView').style.display = 'block';
+            document.getElementById('graphContent').textContent = `📊 HALL CONNECTIVITY & NETWORK GRAPH
+
+Total Halls: 3 | Total Rooms: 15 | Total Network Nodes: 18
+
+HALL-A NETWORK:
+  Block-1 ─ Block-2 ─ (Emergency Exit)
+  101 ↔ 102 ↔ 103 ↔ 104 ↔ 105
+  106 ↔ 107 ↔ 108 ↔ 109 ↔ 110
+
+HALL-B NETWORK:
+  Block-3 ─ Block-4 ─ (Emergency Exit)
+  201 ↔ 202 ↔ 203 ↔ 204 ↔ 205
+  206 ↔ 207 ↔ 208 ↔ 209 ↔ 210
+
+HALL-C NETWORK:
+  Block-5 ─ Block-6 ─ (Emergency Exit)
+  301 ↔ 302 ↔ 303 ↔ 304 ↔ 305
+  306 ↔ 307 ↔ 308 ↔ 309 ↔ 310
+
+INTER-HALL CONNECTIONS:
+  Hall-A ↔ Central Corridor ↔ Hall-B ↔ Central Corridor ↔ Hall-C
+  
+NETWORK DETAILS:
+  • Each room has capacity: 10 students
+  • Average distance between rooms: 50 meters
+  • Network redundancy: Dual exit paths per block
+  • WiFi Coverage: All rooms covered
+  • CCTV Monitoring: Active in all corridors`;
+        }
+        
+        window.addEventListener('load', function() {
+            loadTheme();
+            // Sample data ready, seats pre-allocated
+            generateSampleStudents();
+        });
+    </script>
+</body>
+</html>
